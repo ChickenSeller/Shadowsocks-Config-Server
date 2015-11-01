@@ -11,10 +11,11 @@
 |
 */
 
-Route::get('/', 'WelcomeController@index');
+    Route::get('/', 'RSAController@test');
 
 Route::get('home', 'HomeController@index');
-
+Route::post('config','RSAController@Handle');
+Route::get('config','RSAController@Handle');
 Route::controllers([
 	'auth' => 'Auth\AuthController',
 	'password' => 'Auth\PasswordController',
