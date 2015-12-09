@@ -11,7 +11,11 @@
 |
 */
 
-    Route::get('/', 'RSAController@test');
+Route::get('/', function (){
+    //return view('welcome');
+    return \App\Http\Controllers\ConfigController::GetAllConfig();
+});
+Route::get('test', 'RSAController@Test');
 
 Route::get('home', 'HomeController@index');
 Route::post('config','RSAController@Handle');

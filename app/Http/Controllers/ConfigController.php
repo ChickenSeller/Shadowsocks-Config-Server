@@ -25,7 +25,7 @@ class ConfigController extends Controller {
     public static function GetAllConfig(){
         $Configs = array();
         $i = 0;
-        $Servers = SSServer::get();
+        $Servers = SSServer::all();
         foreach($Servers as $server ){
             $config=new ServerConfig();
             $config->method = $server->method;
@@ -36,6 +36,7 @@ class ConfigController extends Controller {
             $Configs[$i]=$config;
             $i++;
         }
+        //echo $Configs;
         return $Configs;
     }
 

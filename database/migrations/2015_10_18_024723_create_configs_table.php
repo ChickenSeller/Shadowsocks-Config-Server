@@ -19,6 +19,7 @@ class CreateConfigsTable extends Migration {
             $table->string('fingerprint');
             $table->text('publickey');
             $table->text('privatekey');
+            $table->text('friendlyname');
             $table->timestamps();
         });
     }
