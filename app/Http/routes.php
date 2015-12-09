@@ -11,16 +11,7 @@
 |
 */
 
-Route::get('/', function (){
-    //return view('welcome');
-    return \App\Http\Controllers\ConfigController::GetAllConfig();
-});
-Route::get('test', 'RSAController@Test');
+Route::get('/','RSAController@Handle');
+Route::post('/','RSAController@Handle');
+Route::get('test','RSAController@Test');
 
-Route::get('home', 'HomeController@index');
-Route::post('config','RSAController@Handle');
-Route::get('config','RSAController@Handle');
-Route::controllers([
-	'auth' => 'Auth\AuthController',
-	'password' => 'Auth\PasswordController',
-]);
