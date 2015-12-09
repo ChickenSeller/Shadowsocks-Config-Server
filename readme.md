@@ -1,23 +1,26 @@
-## Laravel PHP Framework
+## Shadowsocks Config Server
 
-[![Build Status](https://travis-ci.org/laravel/framework.svg)](https://travis-ci.org/laravel/framework)
-[![Total Downloads](https://poser.pugx.org/laravel/framework/downloads.svg)](https://packagist.org/packages/laravel/framework)
-[![Latest Stable Version](https://poser.pugx.org/laravel/framework/v/stable.svg)](https://packagist.org/packages/laravel/framework)
-[![Latest Unstable Version](https://poser.pugx.org/laravel/framework/v/unstable.svg)](https://packagist.org/packages/laravel/framework)
-[![License](https://poser.pugx.org/laravel/framework/license.svg)](https://packagist.org/packages/laravel/framework)
+Shadowsocks Config Server是一个用于发布Shadowsocks配置的在线服务端，基于laravel开发。
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable, creative experience to be truly fulfilling. Laravel attempts to take the pain out of development by easing common tasks used in the majority of web projects, such as authentication, routing, sessions, queueing, and caching.
+本服务端可以和支持的客户端进行加密的配置传输。
 
-Laravel is accessible, yet powerful, providing powerful tools needed for large, robust applications. A superb inversion of control container, expressive migration system, and tightly integrated unit testing support give you the tools you need to build any application with which you are tasked.
+可用于方便地对外发布与修改shadowsocks服务器信息，服务器维护者可以随时修改shadowsocks的参数而无需专门通知所有用户，用户可以通过服务器维护者提供的发布地址获取最新的配置,在一定程度上增加了发布/修改服务器配置的便利性和安全性.
 
-## Official Documentation
+为了尽量保证通信内容的安全，本服务器与客户端的通信使用RSA加密。
+基本通信过程如下：
 
-Documentation for the framework can be found on the [Laravel website](http://laravel.com/docs).
+*   客户端随机生成一对RSA密钥，并用明文发送公钥至发布服务器.
+*   服务器接收并记录客户端公钥，将服务器的公钥、指纹、随机生成的验证字符串用客户端公钥加密以后发回.
+*   客户端收到服务器公钥和指纹，如果存在对应的本地记录，则将收到的数据与本地记录进行比对，若不相符，判定为无效服务器;若无本地记录，则默认信任服务器有效性并将其加入本地记录.客户端把服务器发来的验证字符串原样返回，同时计算出一个随机字符串，将两者用服务器公钥加密后发往服务器.
+*   服务器收到客户端请求，检查客户端返回的验证字符串并与服务器本地保存的字符串进行对比，若符合则信任客户端身份;否则判定为欺诈请求返回404错误.服务器根据预定策略将Shadowsocks配置和用户生成的验证字符串用客户端公钥加密后返回.
+*   客户端收到数据，校验服务器返回的验证字符串，如果不符，则判定服务器身份不可信;如果相符，信任服务器身份并接受服务器返回的配置，反之则中止该次通信.至此，服务器和客户端完成双向的身份认证和数据的传输.
 
-## Contributing
+虽然客户端的本地记录可以在一定程度上抵抗中间人攻击，在http下与服务器进行首次通信时如果从第一步就被中间人的话是没有解决办法的，所以为了确保安全，建议使用可信的ssl证书通过https方式进行通信.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](http://laravel.com/docs/contributions).
+## 相关文档
+
+[说明文档](http://blog.yanlei.me)
 
 ### License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT)
+本项目基于MIT许可开源[MIT license](http://opensource.org/licenses/MIT)
