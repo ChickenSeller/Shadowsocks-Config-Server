@@ -13,16 +13,7 @@ use Psy\TabCompletion\Matcher\KeywordsMatcher;
 
 class RSAController extends Controller {
     public static function Test(Request $request){
-        $fr = new FingerPrintResponse();
-        $fr->FingerPrint = "xxxxxxxxxxxxxxxxxxxxxx";
-        $fr->ServerPublicKey = "-----BEGIN PUBLIC KEY-----
-MIGdMA0GCSqGSIb3DQEBAQUAA4GLADCBhwKBgQCNzUAbAnPKUpq2KaqQI8OxlQ6s
-RTnBCXxSiEyqx/k8PVexoZVQnE8Hy1CxUqUBH/ub24jMGX1BVDPpMdfJiOOr0gAI
-/OGmDOEo+u3W8sgU8pOlJEtOt2FRJqd7fSi6rW5vS9ZvGbtQoGcVggb55CHYc76y
-uph2O7M2TIGsQFYaiwIBAw==
------END PUBLIC KEY-----";
-        $fr->VerifyString = "xxxxxxxxxxxxxxxxxxxxxxx";
-        echo json_encode($fr);
+
     }
     public static function KeyExchange($ClientKey,$request){
         $res = "";
