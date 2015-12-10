@@ -13,7 +13,7 @@ use Psy\TabCompletion\Matcher\KeywordsMatcher;
 
 class RSAController extends Controller {
     public static function Test(Request $request){
-        $config = array('private_key_bits' => 512);
+        $config = array('private_key_bits' => 1024);
         $privKey = openssl_pkey_new($config);
         var_dump($privKey);
         openssl_pkey_export($privKey, $privKey2);
