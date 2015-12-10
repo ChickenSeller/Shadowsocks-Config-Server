@@ -15,7 +15,6 @@ class RSAController extends Controller {
     public static function Test(Request $request){
         $config = array('private_key_bits' => 512);
         $privKey = openssl_pkey_new($config);
-        echo openssl_error_string();
         var_dump($privKey);
         openssl_pkey_export($privKey, $privKey2);
         $pubKey = openssl_pkey_get_details($privKey);
