@@ -15,7 +15,7 @@ use Illuminate\Http\Request;
 class InstallController extends Controller {
 
 	public static function Install($username,$password,$friendlyname){
-        try{
+
             $User = new User();
             $salt = md5(time().str_random(32));
             $password = md5(base64_encode($password.$salt));
@@ -41,9 +41,7 @@ class InstallController extends Controller {
             $Config->save();
             $myfile = fopen(base_path()."/app.lock", "w");
             return true;
-        }catch (\Exception $e){
-            throw;
-        }
+
 
 
     }
