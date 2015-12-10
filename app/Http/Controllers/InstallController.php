@@ -42,7 +42,7 @@ class InstallController extends Controller {
             $myfile = fopen(base_path()."/app.lock", "w");
             return true;
         }catch (\Exception $e){
-            return false;
+            throw;
         }
 
 

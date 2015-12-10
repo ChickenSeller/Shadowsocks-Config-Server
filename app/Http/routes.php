@@ -21,7 +21,7 @@ Route::post('install',function(){
     $Server = Input::get('servername');
     $res = \App\Http\Controllers\InstallController::Install($Username,$Password,$Server);
     if($res == false){
-        return view('installerror');
+
     }
     return view('complete');
 });
