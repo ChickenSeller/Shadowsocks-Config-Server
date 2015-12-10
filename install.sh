@@ -23,8 +23,8 @@ echo "MAIL_HOST=mailtrap.io" >> .env
 echo "MAIL_PORT=2525" >> .env
 echo "MAIL_USERNAME=null" >> .env
 echo "MAIL_PASSWORD=null" >> .env
-php artisan key:generate
 chmod -R 777 storage
+php artisan key:generate
 php artisan migrate
 if [-d "public/phpmyadmin"]; then
     rm -r public/phpmyadmin
