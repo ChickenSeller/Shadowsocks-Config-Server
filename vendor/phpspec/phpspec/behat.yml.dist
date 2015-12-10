@@ -2,5 +2,14 @@ default:
   suites:
     application:
       contexts: [ ApplicationContext, FilesystemContext ]
-  formatters:
-    progress: ~
+      filters: { tags: ~@isolated }
+    isolated:
+      contexts: [ IsolatedProcessContext, FilesystemContext ]
+      filters: { tags: @isolated }
+    smoke:
+      contexts: [ IsolatedProcessContext, FilesystemContext ]
+      filters: { tags: @smoke && ~@isolated }
+
+no-smoke:
+  suites:
+    smoke: ~

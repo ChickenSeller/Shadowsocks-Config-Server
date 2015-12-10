@@ -34,7 +34,8 @@ class ArrayEngine extends StringEngine
         foreach ($a as $key => $val) {
             switch ($type = strtolower(gettype($val))) {
                 case 'array':
-                    $line = sprintf('%s => %s,',
+                    $line = sprintf(
+                        '%s => %s,',
                         $key,
                         ltrim($this->convertArrayToString($val, $pad+2))
                     );
@@ -46,20 +47,15 @@ class ArrayEngine extends StringEngine
                     $line = sprintf('%s => %s,', $key, $val ? 'true' : 'false');
                     break;
                 case 'object':
-                    $line = sprintf('%s => %s#%s,',
+                    $line = sprintf(
+                        '%s => %s#%s,',
                         $key,
                         get_class($val),
                         spl_object_hash($val)
                     );
                     break;
                 case 'string':
-                    if (25 > strlen($val) && false === strpos($val, PHP_EOL)) {
-                        $val = sprintf('"%s"', $val);
-                    }
-
-                    $lines = explode(PHP_EOL, $val);
-                    $val = sprintf('"%s..."', substr($lines[0], 0, 25));
-
+                    $val = sprintf('"%s"', $val);
                     $line = sprintf('%s => %s,', $key, $val);
                     break;
                 case 'integer':
