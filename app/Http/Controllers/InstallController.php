@@ -50,7 +50,7 @@ class InstallController extends Controller {
         if($Config!=null){
             abort(404);
         }
-
+        return view('install');
     }
 
 }

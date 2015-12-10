@@ -8,14 +8,14 @@
                     <h3 class="panel-title">安装</h3>
                 </div>
                 <div class="panel-body">
-                    {!! Form::open() !!}
+                    {!! Form::open(array('onsubmit' => 'return handlepasswd()')) !!}
                     <div class="form-group">
                         {!! Form::label('username', '管理员用户名') !!}
                         {!! Form::text('username','',array('class' => 'form-control')) !!}
                     </div>
                     <div class="form-group">
                         {!! Form::label('passwd', '管理员密码') !!}
-                        {!! Form::password('passwd',array('class' => 'form-control')) !!}
+                        {!! Form::password('passwd',array('class' => 'form-control','id' => 'passwd')) !!}
                     </div>
                     <div class="form-group">
                         {!! Form::label('servername', '服务器对外名称(以后可修改)') !!}
@@ -34,4 +34,15 @@
             </div>
         </div>
     </div>
+
 @stop
+@section('script')
+    <script type="text/javascript" src="/js/jQuery.md5.js"></script>
+    <script>
+        function handlepasswd(){
+            var rawpasswd=$("#passwd").val();
+
+            return false;
+        }
+    </script>
+    @stop

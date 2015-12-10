@@ -14,4 +14,7 @@
 Route::get('/','RSAController@Handle');
 Route::post('/','RSAController@Handle');
 Route::get('test','RSAController@Test');
+Route::get('install','InstallController@Ready');
+Route::post('install',function(){
 
+});
