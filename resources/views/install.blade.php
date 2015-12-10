@@ -11,7 +11,8 @@
                     {!! Form::open(array('onsubmit' => 'return handlepasswd()')) !!}
                     <div class="form-group">
                         {!! Form::label('username', '管理员用户名') !!}
-                        {!! Form::text('username','',array('class' => 'form-control')) !!}
+
+                        {!! Form::text('username','',array('class' => 'form-control','id' => 'username')) !!}
                     </div>
                     <div class="form-group">
                         {!! Form::label('passwd', '管理员密码') !!}
@@ -19,7 +20,7 @@
                     </div>
                     <div class="form-group">
                         {!! Form::label('servername', '服务器对外名称(以后可修改)') !!}
-                        {!! Form::text('servername','',array('class' => 'form-control')) !!}
+                        {!! Form::text('servername','',array('class' => 'form-control','id' => 'servername')) !!}
                     </div>
                     <div class="form-group">
                         <div style="float:left;width: 50%;text-align: right;padding-right: 10px">
@@ -40,9 +41,21 @@
     <script type="text/javascript" src="/js/jQuery.md5.js"></script>
     <script>
         function handlepasswd(){
+            if($('#username').val()==""){
+                alert("用户名不能为空！");
+                return false;
+            }
+            if($('#passwd').val()==""){
+                alert("密码不能为空！");
+                return false;
+            }
+            if($('#servername').val()==""){
+                alert("服务器名不能为空！");
+                return false;
+            }
             var rawpasswd=$("#passwd").val();
-
-            return false;
+            $("#passwd").val($.md5(rawpasswd));
+            return true;
         }
     </script>
     @stop

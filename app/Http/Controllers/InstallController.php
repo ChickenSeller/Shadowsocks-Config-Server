@@ -15,31 +15,36 @@ use Illuminate\Http\Request;
 class InstallController extends Controller {
 
 	public static function Install($username,$password,$friendlyname){
-        $User = new User();
-        $salt = md5(time().str_random(32));
-        $password = md5(base64_encode($password.$salt));
-        $User->name = $username;
-        $User->password = $password;
-        $User->salt = $salt;
-        $User->save();
-        $config = array('private_key_bits' => 1024);
-        $res = openssl_pkey_new($config);
-        openssl_pkey_export($res, $privKey);
-        $pubKey = openssl_pkey_get_details($res);
-        $pubKey = $pubKey["key"];
-        $Config = Config::find(1);
-        if($Config!=null){
-            abort(404);
+        try{
+            $User = new User();
+            $salt = md5(time().str_random(32));
+            $password = md5(base64_encode($password.$salt));
+            $User->name = $username;
+            $User->password = $password;
+            $User->salt = $salt;
+            $User->save();
+            $config = array('private_key_bits' => 1024);
+            $res = openssl_pkey_new($config);
+            openssl_pkey_export($res, $privKey);
+            $pubKey = openssl_pkey_get_details($res);
+            $pubKey = $pubKey["key"];
+            $Config = Config::find(1);
+            if($Config!=null){
+                abort(404);
+            }
+            $fp = md5(time().str_random(32));
+            $Config = new Config();
+            $Config->fingerprint =  $fp;
+            $Config->publickey = $pubKey;
+            $Config->privatekey = $privKey;
+            $Config->friendlyname = $friendlyname;
+            $Config->save();
+            $myfile = fopen(base_path()."/app.lock", "w");
+            return true;
+        }catch (\Exception $e){
+            return false;
         }
-        $fp = md5(time().str_random(32));
-        $Config = new Config();
-        $Config->fingerprint =  $fp;
-        $Config->publickey = $pubKey;
-        $Config->privatekey = $privKey;
-        $Config->friendlyname = $friendlyname;
-        $Config->save();
-        $myfile = fopen(base_path()."/app.lock", "w");
-        return true;
+
 
     }
     public static function Ready(){

@@ -16,5 +16,12 @@ Route::post('/','RSAController@Handle');
 Route::get('test','RSAController@Test');
 Route::get('install','InstallController@Ready');
 Route::post('install',function(){
-
+    $Username = Input::get('username');
+    $Password = Input::get('passwd');
+    $Server = Input::get('servername');
+    $res = \App\Http\Controllers\InstallController::Install($Username,$Password,$Server);
+    if($res == false){
+        return view('installerror');
+    }
+    return view('complete');
 });
