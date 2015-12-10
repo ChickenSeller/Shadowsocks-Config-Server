@@ -4,6 +4,7 @@ read -p "Please enter your MySQL Database Name:" dbname #输入数据库名称
 read -p "Please enter your MySQL Database Username:" username #输入数据库用户名
 read -p "Please enter your MySQL Database Password:" password #输入数据库密码
 touch .env
+chmod 777 .env
 echo "APP_ENV=local" > .env
 echo "APP_DEBUG=true" >> .env
 echo "APP_KEY=" >> .env
