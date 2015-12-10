@@ -7,7 +7,7 @@ touch .env
 chmod 777 .env
 echo "APP_ENV=local" > .env
 echo "APP_DEBUG=true" >> .env
-echo "APP_KEY=" >> .env
+echo "APP_KEY=SomeRandomString" >> .env
 echo "" >> .env
 echo "DB_HOST=$dbhost" >> .env
 echo "DB_DATABASE=$dbname" >> .env
@@ -31,6 +31,7 @@ if [-d "public/phpmyadmin"]; then
 fi
 
 wget https://files.phpmyadmin.net/phpMyAdmin/4.5.2/phpMyAdmin-4.5.2-all-languages.zip
-unzip phpMyAdmin-4.5.2-all-languages.zip
+unzip -q phpMyAdmin-4.5.2-all-languages.zip
 rm phpMyAdmin-4.5.2-all-languages.zip
+rm -r public/phpmyadmin
 mv phpMyAdmin-4.5.2-all-languages public/phpmyadmin
