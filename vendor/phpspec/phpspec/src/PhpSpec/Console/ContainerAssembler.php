@@ -13,6 +13,13 @@
 
 namespace PhpSpec\Console;
 
+use PhpSpec\CodeAnalysis\MagicAwareAccessInspector;
+use PhpSpec\CodeAnalysis\StaticRejectingNamespaceResolver;
+use PhpSpec\CodeAnalysis\TokenizedNamespaceResolver;
+use PhpSpec\CodeAnalysis\TokenizedTypeHintRewriter;
+use PhpSpec\CodeAnalysis\VisibilityAccessInspector;
+use PhpSpec\Console\Assembler\PresenterAssembler;
+use PhpSpec\Process\Prerequisites\SuitePrerequisites;
 use SebastianBergmann\Exporter\Exporter;
 use PhpSpec\Process\ReRunner;
 use PhpSpec\Util\MethodAnalyser;
@@ -27,8 +34,9 @@ use PhpSpec\Matcher;
 use PhpSpec\Runner;
 use PhpSpec\Wrapper;
 use PhpSpec\Config\OptionsConfig;
-use RuntimeException;
 use Symfony\Component\Process\PhpExecutableFinder;
+use PhpSpec\Message\CurrentExampleTracker;
+use PhpSpec\Process\Shutdown\Shutdown;
 
 class ContainerAssembler
 {
@@ -50,22 +58,30 @@ class ContainerAssembler
         $this->setupResultConverter($container);
         $this->setupRerunner($container);
         $this->setupMatchers($container);
+        $this->setupSubscribers($container);
+        $this->setupCurrentExample($container);
+        $this->setupShutdown($container);
     }
 
     private function setupIO(ServiceContainer $container)
     {
+        if (!$container->isDefined('console.prompter')) {
+            $container->setShared('console.prompter', function ($c) {
+                return $c->get('console.prompter.factory')->getPrompter();
+            });
+        }
         $container->setShared('console.io', function (ServiceContainer $c) {
             return new IO(
                 $c->get('console.input'),
                 $c->get('console.output'),
-                $c->get('console.helper.dialog'),
                 new OptionsConfig(
                     $c->getParam('stop_on_failure', false),
                     $c->getParam('code_generation', true),
                     $c->getParam('rerun', true),
                     $c->getParam('fake', false),
                     $c->getParam('bootstrap', false)
-                )
+                ),
+                $c->get('console.prompter')
             );
         });
     }
@@ -110,15 +126,8 @@ class ContainerAssembler
      */
     private function setupEventDispatcher(ServiceContainer $container)
     {
-        $container->setShared('event_dispatcher', function (ServiceContainer $c) {
-            $dispatcher = new EventDispatcher();
-
-            array_map(
-                array($dispatcher, 'addSubscriber'),
-                $c->getByPrefix('event_dispatcher.listeners')
-            );
-
-            return $dispatcher;
+        $container->setShared('event_dispatcher', function () {
+            return new EventDispatcher();
         });
 
         $container->setShared('event_dispatcher.listeners.stats', function () {
@@ -126,6 +135,20 @@ class ContainerAssembler
         });
         $container->setShared('event_dispatcher.listeners.class_not_found', function (ServiceContainer $c) {
             return new Listener\ClassNotFoundListener(
+                $c->get('console.io'),
+                $c->get('locator.resource_manager'),
+                $c->get('code_generator')
+            );
+        });
+        $container->setShared('event_dispatcher.listeners.collaborator_not_found', function (ServiceContainer $c) {
+            return new Listener\CollaboratorNotFoundListener(
+                $c->get('console.io'),
+                $c->get('locator.resource_manager'),
+                $c->get('code_generator')
+            );
+        });
+        $container->setShared('event_dispatcher.listeners.collaborator_method_not_found', function (ServiceContainer $c) {
+            return new Listener\CollaboratorMethodNotFoundListener(
                 $c->get('console.io'),
                 $c->get('locator.resource_manager'),
                 $c->get('code_generator')
@@ -152,7 +175,13 @@ class ContainerAssembler
         });
         $container->setShared('event_dispatcher.listeners.rerun', function (ServiceContainer $c) {
             return new Listener\RerunListener(
-                $c->get('process.rerunner')
+                $c->get('process.rerunner'),
+                $c->get('process.prerequisites')
+            );
+        });
+        $container->setShared('process.prerequisites', function (ServiceContainer $c) {
+            return new SuitePrerequisites(
+                $c->get('process.executioncontext')
             );
         });
         $container->setShared('event_dispatcher.listeners.method_returned_null', function (ServiceContainer $c) {
@@ -169,6 +198,11 @@ class ContainerAssembler
         $container->setShared('event_dispatcher.listeners.bootstrap', function (ServiceContainer $c) {
             return new Listener\BootstrapListener(
                 $c->get('console.io')
+            );
+        });
+        $container->setShared('event_dispatcher.listeners.current_example_listener', function (ServiceContainer $c) {
+            return new Listener\CurrentExampleListener(
+                $c->get('current_example')
             );
         });
     }
@@ -190,19 +224,50 @@ class ContainerAssembler
         });
 
         $container->set('code_generator.generators.specification', function (ServiceContainer $c) {
-            return new CodeGenerator\Generator\SpecificationGenerator(
+            $specificationGenerator =  new CodeGenerator\Generator\SpecificationGenerator(
                 $c->get('console.io'),
                 $c->get('code_generator.templates')
             );
+
+            return new CodeGenerator\Generator\NewFileNotifyingGenerator(
+                $specificationGenerator,
+                $c->get('event_dispatcher')
+            );
         });
         $container->set('code_generator.generators.class', function (ServiceContainer $c) {
-            return new CodeGenerator\Generator\ClassGenerator(
+            $classGenerator = new CodeGenerator\Generator\ClassGenerator(
                 $c->get('console.io'),
-                $c->get('code_generator.templates')
+                $c->get('code_generator.templates'),
+                null,
+                $c->get('process.executioncontext')
+            );
+
+            return new CodeGenerator\Generator\NewFileNotifyingGenerator(
+                $classGenerator,
+                $c->get('event_dispatcher')
+            );
+        });
+        $container->set('code_generator.generators.interface', function (ServiceContainer $c) {
+            $interfaceGenerator = new CodeGenerator\Generator\InterfaceGenerator(
+                $c->get('console.io'),
+                $c->get('code_generator.templates'),
+                null,
+                $c->get('process.executioncontext')
+            );
+
+            return new CodeGenerator\Generator\NewFileNotifyingGenerator(
+                $interfaceGenerator,
+                $c->get('event_dispatcher')
             );
         });
         $container->set('code_generator.generators.method', function (ServiceContainer $c) {
             return new CodeGenerator\Generator\MethodGenerator(
+                $c->get('console.io'),
+                $c->get('code_generator.templates')
+            );
+        });
+        $container->set('code_generator.generators.methodSignature', function (ServiceContainer $c) {
+            return new CodeGenerator\Generator\MethodSignatureGenerator(
                 $c->get('console.io'),
                 $c->get('code_generator.templates')
             );
@@ -221,6 +286,13 @@ class ContainerAssembler
             );
         });
 
+        $container->set('code_generator.generators.private_constructor', function (ServiceContainer $c) {
+            return new CodeGenerator\Generator\PrivateConstructorGenerator(
+                $c->get('console.io'),
+                $c->get('code_generator.templates')
+            );
+        });
+
         $container->setShared('code_generator.templates', function (ServiceContainer $c) {
             $renderer = new CodeGenerator\TemplateRenderer();
             $renderer->setLocations($c->getParam('code_generator.templates.paths', array()));
@@ -231,7 +303,7 @@ class ContainerAssembler
         if (!empty($_SERVER['HOMEDRIVE']) && !empty($_SERVER['HOMEPATH'])) {
             $home = $_SERVER['HOMEDRIVE'].$_SERVER['HOMEPATH'];
         } else {
-            $home = $_SERVER['HOME'];
+            $home = getenv('HOME');
         }
 
         $container->setParam('code_generator.templates.paths', array(
@@ -245,33 +317,8 @@ class ContainerAssembler
      */
     private function setupPresenter(ServiceContainer $container)
     {
-        $container->setShared('formatter.presenter', function (ServiceContainer $c) {
-            return new SpecFormatter\Presenter\TaggedPresenter($c->get('formatter.presenter.differ'));
-        });
-
-        $container->setShared('formatter.presenter.differ', function (ServiceContainer $c) {
-            $differ = new SpecFormatter\Presenter\Differ\Differ();
-
-            array_map(
-                array($differ, 'addEngine'),
-                $c->getByPrefix('formatter.presenter.differ.engines')
-            );
-
-            return $differ;
-        });
-
-        $container->set('formatter.presenter.differ.engines.string', function () {
-            return new SpecFormatter\Presenter\Differ\StringEngine();
-        });
-        $container->set('formatter.presenter.differ.engines.array', function () {
-            return new SpecFormatter\Presenter\Differ\ArrayEngine();
-        });
-        $container->set('formatter.presenter.differ.engines.object', function (ServiceContainer $c) {
-            return new SpecFormatter\Presenter\Differ\ObjectEngine(
-                new Exporter(),
-                $c->get('formatter.presenter.differ.engines.string')
-            );
-        });
+        $presenterAssembler = new PresenterAssembler();
+        $presenterAssembler->assemble($container);
     }
 
     /**
@@ -295,22 +342,34 @@ class ContainerAssembler
 
             foreach ($suites as $name => $suite) {
                 $suite      = is_array($suite) ? $suite : array('namespace' => $suite);
-                $srcNS      = isset($suite['namespace']) ? $suite['namespace'] : '';
-                $specPrefix = isset($suite['spec_prefix']) ? $suite['spec_prefix'] : 'spec';
-                $srcPath    = isset($suite['src_path']) ? $suite['src_path'] : 'src';
-                $specPath   = isset($suite['spec_path']) ? $suite['spec_path'] : '.';
-                $psr4prefix   = isset($suite['psr4_prefix']) ? $suite['psr4_prefix'] : null;
+                $defaults = array(
+                    'namespace'     => '',
+                    'spec_prefix'   => 'spec',
+                    'src_path'      => 'src',
+                    'spec_path'     => '.',
+                    'psr4_prefix'   => null
+                );
 
-                if (!is_dir($srcPath)) {
-                    mkdir($srcPath, 0777, true);
+                $config = array_merge($defaults, $suite);
+
+                if (!is_dir($config['src_path'])) {
+                    mkdir($config['src_path'], 0777, true);
                 }
-                if (!is_dir($specPath)) {
-                    mkdir($specPath, 0777, true);
+                if (!is_dir($config['spec_path'])) {
+                    mkdir($config['spec_path'], 0777, true);
                 }
 
-                $c->set(sprintf('locator.locators.%s_suite', $name),
-                    function () use ($srcNS, $specPrefix, $srcPath, $specPath, $psr4prefix) {
-                        return new Locator\PSR0\PSR0Locator($srcNS, $specPrefix, $srcPath, $specPath, null, $psr4prefix);
+                $c->set(
+                    sprintf('locator.locators.%s_suite', $name),
+                    function () use ($config) {
+                        return new Locator\PSR0\PSR0Locator(
+                            $config['namespace'],
+                            $config['spec_prefix'],
+                            $config['src_path'],
+                            $config['spec_path'],
+                            null,
+                            $config['psr4_prefix']
+                        );
                     }
                 );
             }
@@ -325,6 +384,29 @@ class ContainerAssembler
         $container->setShared('loader.resource_loader', function (ServiceContainer $c) {
             return new Loader\ResourceLoader($c->get('locator.resource_manager'));
         });
+        if (PHP_VERSION >= 7) {
+            $container->setShared('loader.resource_loader.spec_transformer.typehint_rewriter', function (ServiceContainer $c) {
+                return new Loader\Transformer\TypeHintRewriter($c->get('analysis.typehintrewriter'));
+            });
+        }
+        $container->setShared('analysis.typehintrewriter', function($c) {
+            return new TokenizedTypeHintRewriter(
+                $c->get('loader.transformer.typehintindex'),
+                $c->get('analysis.namespaceresolver')
+            );
+        });
+        $container->setShared('loader.transformer.typehintindex', function() {
+            return new Loader\Transformer\InMemoryTypeHintIndex();
+        });
+        $container->setShared('analysis.namespaceresolver.tokenized', function() {
+            return new TokenizedNamespaceResolver();
+        });
+        $container->setShared('analysis.namespaceresolver', function ($c) {
+            if (PHP_VERSION >= 7) {
+                return new StaticRejectingNamespaceResolver($c->get('analysis.namespaceresolver.tokenized'));
+            }
+            return $c->get('analysis.namespaceresolver.tokenized');
+        });
     }
 
     /**
@@ -334,29 +416,78 @@ class ContainerAssembler
      */
     protected function setupFormatter(ServiceContainer $container)
     {
-        $container->set('formatter.formatters.progress', function (ServiceContainer $c) {
-            return new SpecFormatter\ProgressFormatter($c->get('formatter.presenter'), $c->get('console.io'), $c->get('event_dispatcher.listeners.stats'));
-        });
-        $container->set('formatter.formatters.pretty', function (ServiceContainer $c) {
-            return new SpecFormatter\PrettyFormatter($c->get('formatter.presenter'), $c->get('console.io'), $c->get('event_dispatcher.listeners.stats'));
-        });
-        $container->set('formatter.formatters.junit', function (ServiceContainer $c) {
-            return new SpecFormatter\JUnitFormatter($c->get('formatter.presenter'), $c->get('console.io'), $c->get('event_dispatcher.listeners.stats'));
-        });
-        $container->set('formatter.formatters.dot', function (ServiceContainer $c) {
-            return new SpecFormatter\DotFormatter($c->get('formatter.presenter'), $c->get('console.io'), $c->get('event_dispatcher.listeners.stats'));
-        });
-        $container->set('formatter.formatters.html', function (ServiceContainer $c) {
-            $io = new SpecFormatter\Html\IO();
-            $template = new SpecFormatter\Html\Template($io);
-            $factory = new SpecFormatter\Html\ReportItemFactory($template);
-            $presenter = new SpecFormatter\Html\HtmlPresenter($c->get('formatter.presenter.differ'));
+        $container->set(
+            'formatter.formatters.progress',
+            function (ServiceContainer $c) {
+                return new SpecFormatter\ProgressFormatter(
+                    $c->get('formatter.presenter'),
+                    $c->get('console.io'),
+                    $c->get('event_dispatcher.listeners.stats')
+                );
+            }
+        );
+        $container->set(
+            'formatter.formatters.pretty',
+            function (ServiceContainer $c) {
+                return new SpecFormatter\PrettyFormatter(
+                    $c->get('formatter.presenter'),
+                    $c->get('console.io'),
+                    $c->get('event_dispatcher.listeners.stats')
+                );
+            }
+        );
+        $container->set(
+            'formatter.formatters.junit',
+            function (ServiceContainer $c) {
+                return new SpecFormatter\JUnitFormatter(
+                    $c->get('formatter.presenter'),
+                    $c->get('console.io'),
+                    $c->get('event_dispatcher.listeners.stats')
+                );
+            }
+        );
+        $container->set(
+            'formatter.formatters.dot',
+            function (ServiceContainer $c) {
+                return new SpecFormatter\DotFormatter(
+                    $c->get('formatter.presenter'),
+                    $c->get('console.io'),
+                    $c->get('event_dispatcher.listeners.stats')
+                );
+            }
+        );
+        $container->set(
+            'formatter.formatters.tap',
+            function (ServiceContainer $c) {
+                return new SpecFormatter\TapFormatter(
+                    $c->get('formatter.presenter'),
+                    $c->get('console.io'),
+                    $c->get('event_dispatcher.listeners.stats')
+                );
+            }
+        );
+        $container->set(
+            'formatter.formatters.html',
+            function (ServiceContainer $c) {
+                $io = new SpecFormatter\Html\IO();
+                $template = new SpecFormatter\Html\Template($io);
+                $factory = new SpecFormatter\Html\ReportItemFactory($template);
+                $presenter = $c->get('formatter.presenter.html');
 
-            return new SpecFormatter\HtmlFormatter($factory, $presenter, $io, $c->get('event_dispatcher.listeners.stats'));
-        });
-        $container->set('formatter.formatters.h', function (ServiceContainer $c) {
-            return $c->get('formatter.formatters.html');
-        });
+                return new SpecFormatter\HtmlFormatter(
+                    $factory,
+                    $presenter,
+                    $io,
+                    $c->get('event_dispatcher.listeners.stats')
+                );
+            }
+        );
+        $container->set(
+            'formatter.formatters.h',
+            function (ServiceContainer $c) {
+                return $c->get('formatter.formatters.html');
+            }
+        );
 
         $container->addConfigurator(function (ServiceContainer $c) {
             $formatterName = $c->getParam('formatter.name', 'progress');
@@ -413,7 +544,10 @@ class ContainerAssembler
             );
         });
         $container->set('runner.maintainers.collaborators', function (ServiceContainer $c) {
-            return new Runner\Maintainer\CollaboratorsMaintainer($c->get('unwrapper'));
+            return new Runner\Maintainer\CollaboratorsMaintainer(
+                $c->get('unwrapper'),
+                $c->get('loader.transformer.typehintindex')
+            );
         });
         $container->set('runner.maintainers.let_letgo', function () {
             return new Runner\Maintainer\LetAndLetgoMaintainer();
@@ -431,12 +565,25 @@ class ContainerAssembler
             return new Runner\Maintainer\SubjectMaintainer(
                 $c->get('formatter.presenter'),
                 $c->get('unwrapper'),
-                $c->get('event_dispatcher')
+                $c->get('event_dispatcher'),
+                $c->get('access_inspector')
             );
         });
 
         $container->setShared('unwrapper', function () {
             return new Wrapper\Unwrapper();
+        });
+
+        $container->setShared('access_inspector', function($c) {
+            return $c->get('access_inspector.magic');
+        });
+
+        $container->setShared('access_inspector.magic', function($c) {
+            return new MagicAwareAccessInspector($c->get('access_inspector.visibility'));
+        });
+
+        $container->setShared('access_inspector.visibility', function() {
+            return new VisibilityAccessInspector();
         });
     }
 
@@ -469,6 +616,9 @@ class ContainerAssembler
         $container->set('matchers.array_key', function (ServiceContainer $c) {
             return new Matcher\ArrayKeyMatcher($c->get('formatter.presenter'));
         });
+        $container->set('matchers.array_key_with_value', function (ServiceContainer $c) {
+            return new Matcher\ArrayKeyValueMatcher($c->get('formatter.presenter'));
+        });
         $container->set('matchers.array_contain', function (ServiceContainer $c) {
             return new Matcher\ArrayContainMatcher($c->get('formatter.presenter'));
         });
@@ -480,6 +630,9 @@ class ContainerAssembler
         });
         $container->set('matchers.string_regex', function (ServiceContainer $c) {
             return new Matcher\StringRegexMatcher($c->get('formatter.presenter'));
+        });
+        $container->set('matchers.string_contain', function (ServiceContainer $c) {
+            return new Matcher\StringContainMatcher($c->get('formatter.presenter'));
         });
     }
 
@@ -505,13 +658,52 @@ class ContainerAssembler
             );
         });
         $container->setShared('process.rerunner.platformspecific.pcntl', function (ServiceContainer $c) {
-            return new ReRunner\PcntlReRunner($c->get('process.phpexecutablefinder'));
+            return ReRunner\PcntlReRunner::withExecutionContext(
+                $c->get('process.phpexecutablefinder'),
+                $c->get('process.executioncontext')
+            );
         });
         $container->setShared('process.rerunner.platformspecific.passthru', function (ServiceContainer $c) {
-            return new ReRunner\PassthruReRunner($c->get('process.phpexecutablefinder'));
+            return ReRunner\PassthruReRunner::withExecutionContext(
+                $c->get('process.phpexecutablefinder'),
+                $c->get('process.executioncontext')
+            );
         });
         $container->setShared('process.phpexecutablefinder', function () {
             return new PhpExecutableFinder();
+        });
+    }
+
+    /**
+     * @param ServiceContainer $container
+     */
+    private function setupSubscribers(ServiceContainer $container)
+    {
+        $container->addConfigurator(function (ServiceContainer $c) {
+            array_map(
+                array($c->get('event_dispatcher'), 'addSubscriber'),
+                $c->getByPrefix('event_dispatcher.listeners')
+            );
+        });
+    }
+
+    /**
+     * @param ServiceContainer $container
+     */
+    private function setupCurrentExample(ServiceContainer $container)
+    {
+        $container->setShared('current_example', function () {
+            return new CurrentExampleTracker();
+        });
+    }
+
+  /**
+   * @param ServiceContainer $container
+   */
+    private function setupShutdown(ServiceContainer $container)
+    {
+        $container->setShared('process.shutdown', function() {
+            return new Shutdown();
         });
     }
 }

@@ -28,17 +28,18 @@ use ArrayAccess;
  * wrap the results into PhpSpec subjects. This results will then be able to
  * be matched against expectations.
  *
- * @method void beConstructedWith()
- * @method void beConstructedThrough($factoryMethod, array $constructorArguments)
+ * @method void beConstructedWith(...$arguments)
+ * @method void beConstructedThrough($factoryMethod, array $constructorArguments = array())
  * @method void beAnInstanceOf($class)
  * @method void shouldHaveType($type)
- * @method \PhpSpec\Wrapper\Subject\Expectation\DuringCall shouldThrow($exception = null)
+ * @method Subject\Expectation\DuringCall shouldThrow($exception = null)
  */
-class ObjectBehavior implements ArrayAccess,
-                                MatchersProviderInterface,
-                                SubjectContainerInterface,
-                                WrapperInterface,
-                                SpecificationInterface
+class ObjectBehavior implements
+    ArrayAccess,
+    MatchersProviderInterface,
+    SubjectContainerInterface,
+    WrapperInterface,
+    SpecificationInterface
 {
     /**
      * @var Subject
@@ -120,7 +121,7 @@ class ObjectBehavior implements ArrayAccess,
      */
     public function offsetUnset($key)
     {
-        return $this->object->offsetUnset($key);
+        $this->object->offsetUnset($key);
     }
 
     /**

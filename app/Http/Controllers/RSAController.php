@@ -13,6 +13,7 @@ use Psy\TabCompletion\Matcher\KeywordsMatcher;
 
 class RSAController extends Controller {
     public static function Test(Request $request){
+        /*
         $config = array('private_key_bits' => 1024);
         $privKey = openssl_pkey_new($config);
         var_dump($privKey);
@@ -21,7 +22,9 @@ class RSAController extends Controller {
         $pubKey = $pubKey["key"];
         var_dump($privKey2);
         var_dump($pubKey);
-
+        $myfile = fopen(base_path()."/app.lock", "w");
+        */
+        return view('install');
     }
     public static function KeyExchange($ClientKey,$request){
         $res = "";

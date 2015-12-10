@@ -50,10 +50,11 @@ class SpecificationGenerator extends PromptingGenerator
     protected function renderTemplate(ResourceInterface $resource, $filepath)
     {
         $values = array(
-            '%filepath%'  => $filepath,
-            '%name%'      => $resource->getSpecName(),
-            '%namespace%' => $resource->getSpecNamespace(),
-            '%subject%'   => $resource->getSrcClassname()
+            '%filepath%'      => $filepath,
+            '%name%'          => $resource->getSpecName(),
+            '%namespace%'     => $resource->getSpecNamespace(),
+            '%subject%'       => $resource->getSrcClassname(),
+            '%subject_class%' => $resource->getName()
         );
 
         if (!$content = $this->getTemplateRenderer()->render('specification', $values)) {
@@ -90,7 +91,8 @@ class SpecificationGenerator extends PromptingGenerator
     {
         return sprintf(
             "<info>Specification for <value>%s</value> created in <value>%s</value>.</info>\n",
-            $resource->getSrcClassname(), $filepath
+            $resource->getSrcClassname(),
+            $filepath
         );
     }
 }
