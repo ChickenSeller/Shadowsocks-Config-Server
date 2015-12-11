@@ -17,7 +17,7 @@ class ViewController extends Controller {
         return view('panel')->with(['ItemList'=>ServerController::GeneratePanelServerList(),'Section'=>'','Script'=>'']);
     }
     public static function RstPasswdView(){
-        $res = AuthController::RstPasswd(Session::get('username'),\Illuminate\Support\Facades\Request::get('oldpasswd'),\Illuminate\Support\Facades\Request::get('newpasswd'));
+        $res = AuthController::RstPasswd(Session::get('username'),\Illuminate\Support\Facades\Request::get('old_passwd'),\Illuminate\Support\Facades\Request::get('new_passwd'));
         if($res==true){
             $Script = "<script>alert(\"密码修改成功\");</script>";
             return view('panel')->with(['ItemList'=>ServerController::GeneratePanelServerList(),'Section'=>'Passwd','Script'=>$Script]);
