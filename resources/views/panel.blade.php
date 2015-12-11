@@ -58,10 +58,6 @@
                     <div class="panel-body">
                         {!! Form::open(['url' => '/panel?action=AddServer', 'method' => 'post','onsubmit' => 'return checkAddItem()']) !!}
                         <div class="form-group">
-                            {!! Form::label('server_id', '服务器序号(选填)') !!}
-                            {!! Form::text('server_id','',array('class' => 'form-control','id' => 'server_id')) !!}
-                        </div>
-                        <div class="form-group">
                             {!! Form::label('server_host', '服务器地址') !!}
                             {!! Form::text('server_host','',array('class' => 'form-control','id' => 'server_host')) !!}
                         </div>
@@ -127,6 +123,11 @@
             <div style="margin-top: 10px" class="tab-pane fade <?php if($Section=="ChangeName"){echo "in active";} ?>" id="changeName">
                 <div style="margin-left: auto;margin-right: auto;width: 500px">
                     <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <div id="oldname">
+
+                            </div>
+                        </div>
                         <div class="panel-body">
                             {!! Form::open(['url' => '/panel?action=ChangeName', 'method' => 'post','onsubmit' => 'return checkServerName()']) !!}
                             <div class="form-group">

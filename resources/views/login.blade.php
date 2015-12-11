@@ -1,7 +1,6 @@
 @extends('base')
 @section('content')
     <div style="margin-top: 20px">
-
         <div style="width: 500px;margin-left: auto;margin-right: auto;" class="row">
             <div class="panel panel-default">
                 <div class="panel-heading">

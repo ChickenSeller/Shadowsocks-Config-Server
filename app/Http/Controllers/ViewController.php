@@ -36,5 +36,15 @@ class ViewController extends Controller {
             return view('panel')->with(['ItemList'=>ServerController::GeneratePanelServerList(),'Section'=>'AddItem','Script'=>$Script]);
         }
     }
+    public  static function ChnageNameView(){
+        $res = ServerController::ChnageName();
+        if($res == true){
+            $Script = "<script>alert(\"修改成功\");</script>";
+            return view('panel')->with(['ItemList'=>ServerController::GeneratePanelServerList(),'Section'=>'ChangeName','Script'=>$Script]);
+        }else{
+            $Script = "<script>alert(\"修改失败\");</script>";
+            return view('panel')->with(['ItemList'=>ServerController::GeneratePanelServerList(),'Section'=>'AddItem','Script'=>$Script]);
+        }
+    }
 
 }

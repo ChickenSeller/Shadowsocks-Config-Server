@@ -1,5 +1,6 @@
 <?php namespace App\Http\Controllers;
 
+use App\Config;
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
 
@@ -62,9 +63,7 @@ class ServerController extends Controller {
     }
     public static function AddServer(){
         $Server = new SSServer();
-        if((is_numeric(\Illuminate\Support\Facades\Request::get('server_id'))==true) && (\Illuminate\Support\Facades\Request::get('item_id')!="")){
-            $Server->id=\Illuminate\Support\Facades\Request::get('server_id');
-        }
+
         if(\Illuminate\Support\Facades\Request::get('server_host')==""){
             return false;
         }
@@ -85,5 +84,12 @@ class ServerController extends Controller {
         $Server->save();
         return $Server->save();
     }
-
+    public  static function ChnageName(){
+        $Config = Config::find(1);
+        if(\Illuminate\Support\Facades\Request::get('provider_name')==""){
+            return false;
+        }
+        $Config->friendlyname = \Illuminate\Support\Facades\Request::get('provider_name');
+        return true;
+    }
 }

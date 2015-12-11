@@ -34,6 +34,7 @@ class InstallController extends Controller {
             }
             $fp = md5(time().str_random(32));
             $Config = new Config();
+            $Config->id = 1;
             $Config->fingerprint =  $fp;
             $Config->publickey = $pubKey;
             $Config->privatekey = $privKey;
