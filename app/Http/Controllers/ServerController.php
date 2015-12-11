@@ -20,7 +20,6 @@ class ServerController extends Controller {
     }
     public static function DelServer($ServerID){
         $Server = SSServer::find($ServerID);
-        var_dump($Server);
         if($Server==null){return true;}
         SSServer::destroy($ServerID);
         $Server = SSServer::find($ServerID);

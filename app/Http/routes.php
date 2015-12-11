@@ -44,7 +44,6 @@ Route::group(['middleware' => 'userAuth'],function(){
     Route::post('panel',function(){
         switch(Request::get('action')){
             case "DelServer":
-                return Request::get('ServerID');
                 return \App\Http\Controllers\ViewController::DelServerView(Request::get('ServerID'));
                 break;
             case "RstPasswd":
