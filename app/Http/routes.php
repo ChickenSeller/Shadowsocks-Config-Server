@@ -55,7 +55,7 @@ Route::group(['middleware' => 'userAuth'],function(){
                 return \App\Http\Controllers\ViewController::AddServerView();
                 break;
             case "ChangeName":
-
+                return \App\Http\Controllers\ViewController::ChnageNameView();
                 break;
             default:
                 return \App\Http\Controllers\ViewController::PanelView();
@@ -68,6 +68,7 @@ Route::group(['middleware' => 'userAuth'],function(){
                 return \App\Http\Controllers\ViewController::DelServerView(Request::get('ServerID'));
                 break;
             case "ChnageName":
+                return \App\Http\Controllers\ViewController::PanelView("ChnageName");
                 break;
             case "RstPasswd":
                 //return Request::get('newpasswd');
