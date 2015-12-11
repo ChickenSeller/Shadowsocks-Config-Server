@@ -65,7 +65,7 @@ Route::group(['middleware' => 'userAuth'],function(){
     });
     Route::get('panel',function(){
         switch(Request::get('action')){
-            case "DelItem":
+            case "DelServer":
                 return \App\Http\Controllers\ViewController::DelServerView(Request::get('ServerID'));
                 break;
             case "ChnageName":
