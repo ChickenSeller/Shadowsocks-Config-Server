@@ -41,7 +41,7 @@ Route::get('login',function(){
 });
 
 Route::group(['middleware' => 'userAuth'],function(){
-    Route::post('Panel',function(){
+    Route::post('panel',function(){
         switch(Request::get('action')){
             case "DelItem":
                 return \App\Http\Controllers\ViewController::DelItemView(Request::get('ItemID'));

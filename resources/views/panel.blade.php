@@ -1,6 +1,6 @@
 @extends('base')
 @section('content')
-    <div style="text-align: center;margin-top: 5px;width: 50%;margin-left: auto;margin-right: auto">
+    <div style="margin-top: 5px;width: 50%;margin-left: auto;margin-right: auto">
         <ul id="myTab" class="nav nav-pills">
             <li <?php if($Section==""||$Section=="Index"){echo "class=\"active\"";} ?>>
                 <a href="#home" data-toggle="tab">
