@@ -19,7 +19,7 @@ Shadowsocks Config Server是一个用于发布Shadowsocks配置的在线服务�
 
 ## 相关文档
 
-[说明文档](http://blog.yanlei.me)
+[说明文档](https://github.com/SuperHentai/Shadowsocks-Config-Server/wiki/%E8%AF%B4%E6%98%8E%E6%96%87%E6%A1%A3)
 
 ### License
 
