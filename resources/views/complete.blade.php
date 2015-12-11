@@ -12,7 +12,7 @@
                         </h2>
                     </p>
                     <div>
-                        <a class="btn btn-default" href="/Panel">跳转到后台</a>
+                        <a class="btn btn-default" href="/panel">跳转到后台</a>
                     </div>
                 </div>
             </div>
