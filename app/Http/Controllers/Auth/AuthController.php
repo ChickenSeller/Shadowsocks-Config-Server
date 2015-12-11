@@ -18,11 +18,11 @@ class AuthController extends Controller {
         if($UserAuth==false){
             //Session::flush();
             //return AuthController::EncryptPasswd($Passwd);
-            return view('Login');
+            return view('login');
         }else{
             Session::put('username',$UserAuth->name);
             Session::put('userid',$UserAuth->id);
-            return Redirect::to('Panel');
+            return Redirect::to('panel');
         }
 
     }
