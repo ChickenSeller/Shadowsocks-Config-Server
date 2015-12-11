@@ -26,8 +26,3 @@ echo "MAIL_PASSWORD=null" >> .env
 chmod -R 777 storage
 php artisan key:generate
 php artisan migrate
-wget https://files.phpmyadmin.net/phpMyAdmin/4.5.2/phpMyAdmin-4.5.2-all-languages.zip
-unzip -q phpMyAdmin-4.5.2-all-languages.zip
-rm phpMyAdmin-4.5.2-all-languages.zip
-rm -r public/phpmyadmin
-mv phpMyAdmin-4.5.2-all-languages public/phpmyadmin
