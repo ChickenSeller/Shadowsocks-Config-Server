@@ -39,7 +39,6 @@ class InstallController extends Controller {
             $Config->privatekey = $privKey;
             $Config->friendlyname = $friendlyname;
             $Config->save();
-            $myfile = fopen(base_path()."/app.lock", "w");
             return true;
 
 

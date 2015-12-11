@@ -1,38 +1,53 @@
 <?php namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\User;
 use Illuminate\Contracts\Auth\Guard;
 use Illuminate\Contracts\Auth\Registrar;
 use Illuminate\Foundation\Auth\AuthenticatesAndRegistersUsers;
+use Illuminate\Support\Facades\Input;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Session;
 
 class AuthController extends Controller {
+    public static function Login(){
+        $Passwd=Input::get('passwd');
+        $Username=Input::get('username');
+        $UserAuth = AuthController::UserAuth($Username,$Passwd);
+        //var_dump($UserAuth);
+        if($UserAuth==false){
+            //Session::flush();
+            //return AuthController::EncryptPasswd($Passwd);
+            return view('Login');
+        }else{
+            Session::put('username',$UserAuth->name);
+            Session::put('userid',$UserAuth->id);
+            return Redirect::to('Panel');
+        }
 
-	/*
-	|--------------------------------------------------------------------------
-	| Registration & Login Controller
-	|--------------------------------------------------------------------------
-	|
-	| This controller handles the registration of new users, as well as the
-	| authentication of existing users. By default, this controller uses
-	| a simple trait to add these behaviors. Why don't you explore it?
-	|
-	*/
-
-	use AuthenticatesAndRegistersUsers;
-
-	/**
-	 * Create a new authentication controller instance.
-	 *
-	 * @param  \Illuminate\Contracts\Auth\Guard  $auth
-	 * @param  \Illuminate\Contracts\Auth\Registrar  $registrar
-	 * @return void
-	 */
-	public function __construct(Guard $auth, Registrar $registrar)
-	{
-		$this->auth = $auth;
-		$this->registrar = $registrar;
-
-		$this->middleware('guest', ['except' => 'getLogout']);
-	}
-
+    }
+    public static function EncryptPasswd($salt,$Passwd){
+        $result = md5(base64_encode($Passwd.$salt));
+        return $result;
+    }
+    public static function UserAuth($Username,$Passwd){
+        $User = User::where('name','=',$Username)->first();
+        //var_dump($User);
+        if($User==null){
+            return false;
+        }else{
+            if($User->password == AuthController::EncryptPasswd($User->salt,$Passwd)){
+                return $User;
+            }else{
+                return false;
+            }
+        }
+    }
+    public static function RstPasswd($UserName,$OldPasswd,$Passwd){
+        if(AuthController::UserAuth($UserName,$OldPasswd)==false){return false;}
+        $User = User::where('name','=',$UserName)->first();
+        $User->password=AuthController::EncryptPasswd($User->salt,$Passwd);
+        $User->save();
+        return true;
+    }
 }
