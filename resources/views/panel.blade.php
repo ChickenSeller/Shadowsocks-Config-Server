@@ -53,6 +53,7 @@
                 </div>
             </div>
             <div style="margin-top: 10px" class="tab-pane fade <?php if($Section=="AddItem"){echo "in active";} ?>" id="additem">
+                <div style="margin-left: auto;margin-right: auto;width: 500px">
                 <div class="panel panel-default">
                     <div class="panel-body">
                         {!! Form::open(['url' => '/panel?action=AddItem', 'method' => 'post','onsubmit' => 'return checkAddItem()']) !!}
@@ -91,7 +92,7 @@
                         {!! Form::close() !!}
                     </div>
                 </div>
-
+                </div>
             </div>
             <div style="margin-top: 10px" class="tab-pane fade <?php if($Section=="Passwd"){echo "in active";} ?>" id="changePasswd">
                 <div style="margin-left: auto;margin-right: auto;width: 500px">

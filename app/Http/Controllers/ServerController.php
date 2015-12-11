@@ -39,7 +39,7 @@ class ServerController extends Controller {
         $Server = SSServer::find($ServerID);
         if($Server==null){return null;}
         //$HrefEdit=sprintf("<a href=\"/Panel?action=EditServer&ServerID=%s\">编辑</a>",$Server->id);
-        $HrefDel=sprintf("<a href=\"/Panel?action=DelServer&ServerID=%s\">删除</a>",$Server->id);
+        $HrefDel=sprintf("<a href=\"/panel?action=DelServer&ServerID=%s\">删除</a>",$Server->id);
         $result = sprintf("
                         <tr>
                             <td>%s</td>

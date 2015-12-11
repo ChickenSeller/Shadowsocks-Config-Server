@@ -26,7 +26,7 @@ class ViewController extends Controller {
             return view('panel')->with(['ItemList'=>ServerController::GeneratePanelServerList(),'Section'=>'Passwd','Script'=>$Script]);
         }
     }
-    public static function AddItem(){
+    public static function AddServerView(){
         $res = ServerController::AddServer();
         if($res==false){
             $Script = "<script>alert(\"服务器添加失败\");</script>";

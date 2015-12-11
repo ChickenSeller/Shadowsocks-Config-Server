@@ -43,19 +43,19 @@ Route::get('login',function(){
 Route::group(['middleware' => 'userAuth'],function(){
     Route::post('panel',function(){
         switch(Request::get('action')){
-            case "DelItem":
-                return \App\Http\Controllers\ViewController::DelItemView(Request::get('ItemID'));
-                break;
-            case "EditItem":
-
+            case "DelServer":
+                return \App\Http\Controllers\ViewController::DelServerView(Request::get('ServerID'));
                 break;
             case "RstPasswd":
                 //return Request::get('newpasswd');
                 return \App\Http\Controllers\ViewController::RstPasswdView();
                 break;
-            case "AddItem":
+            case "AddServer":
                 //return Request::get('newpasswd');
-                return \App\Http\Controllers\ViewController::AddItem();
+                return \App\Http\Controllers\ViewController::AddServerView();
+                break;
+            case "ChangeName":
+
                 break;
             default:
                 return \App\Http\Controllers\ViewController::PanelView();
@@ -65,10 +65,9 @@ Route::group(['middleware' => 'userAuth'],function(){
     Route::get('panel',function(){
         switch(Request::get('action')){
             case "DelItem":
-                return \App\Http\Controllers\ViewController::DelItemView(Request::get('ItemID'));
+                return \App\Http\Controllers\ViewController::DelServerView(Request::get('ServerID'));
                 break;
-            case "EditItem":
-                return \App\Http\Controllers\ViewController::PanelView("EditItem");
+            case "ChnageName":
                 break;
             case "RstPasswd":
                 //return Request::get('newpasswd');
@@ -78,7 +77,6 @@ Route::group(['middleware' => 'userAuth'],function(){
                 //return Request::get('newpasswd');
                 return \App\Http\Controllers\ViewController::PanelView("AddItem");
                 break;
-
             default:
                 return \App\Http\Controllers\ViewController::PanelView();
         }
