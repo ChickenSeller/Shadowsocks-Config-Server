@@ -90,6 +90,7 @@ class ServerController extends Controller {
             return false;
         }
         $Config->friendlyname = \Illuminate\Support\Facades\Request::get('provider_name');
+        $Config->save();
         return true;
     }
 }
