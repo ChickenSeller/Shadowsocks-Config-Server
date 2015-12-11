@@ -56,7 +56,7 @@
                 <div style="margin-left: auto;margin-right: auto;width: 500px">
                 <div class="panel panel-default">
                     <div class="panel-body">
-                        {!! Form::open(['url' => '/panel?action=AddItem', 'method' => 'post','onsubmit' => 'return checkAddItem()']) !!}
+                        {!! Form::open(['url' => '/panel?action=AddServer', 'method' => 'post','onsubmit' => 'return checkAddItem()']) !!}
                         <div class="form-group">
                             {!! Form::label('server_id', '服务器序号(选填)') !!}
                             {!! Form::text('server_id','',array('class' => 'form-control','id' => 'server_id')) !!}
