@@ -58,7 +58,7 @@ class ConfigController extends Controller {
             $Configs[$i]=$config;
             $i++;
         }
-        return Configs;
+        return $Configs;
     }
 
 }
