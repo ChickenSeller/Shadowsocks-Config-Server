@@ -39,6 +39,26 @@ class ConfigController extends Controller {
         //echo $Configs;
         return $Configs;
     }
+    
+    public static function GetSSvipConfig($token){
+        $SSVip = "https://beta.ssvip.lol/";
+        $Key = "7a5ff735f1da46849e9f654b9f030fec";
+        $Url = $SSVip.'key='.$Key.'&token='.$token;
+        $Json = file_get_contents($Url);
+        $JsonObj = json_decode($Json);
+        $Configs = array();
+        $i = 0;
+        foreach ($JsonObj as $server){
+            $config=new ServerConfig();
+            $config->method = $server->method;
+            $config->server = $server->server;
+            $config->password =$server->password;
+            $config->remarks = $server->remarks;
+            $config->server_port =$server->server_port;
+            $Configs[$i]=$config;
+            $i++;
+        }
+    }
 
 }
 class ServerConfig{

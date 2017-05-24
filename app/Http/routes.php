@@ -13,6 +13,8 @@
 
 Route::get('/','RSAController@Handle');
 Route::post('/','RSAController@Handle');
+Route::get('ssvip/{token}','RSAController@HandleSSVip');
+Route::post('ssvip/{token}','RSAController@HandleSSVip');
 Route::get('test',function(){
     return view('complete');
 });

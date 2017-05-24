@@ -81,6 +81,39 @@ class RSAController extends Controller {
         $request->session()->forget('provider');
         return $res;
     }
+    public static function PushSSVipConfig($PostData,$request,$token){
+        $RequestJson = "";
+        $crypt = new mycrypt();
+        try{
+            $RequestJson = $crypt->decrypt($PostData);
+        }catch (\Exception $e){
+            abort(404);
+        }
+        $Request = json_decode($RequestJson);
+        $DecryptedString = $Request->decrypted_string;
+        $VerifyString=$Request->verify_string;
+        $fp = Session::get('fp');
+        $Session = \App\Session::where('session_fp','=',$fp)->where('verify_string','=',$DecryptedString)->first();
+        if($Session==null){
+            abort(404);
+        }
+        $Configs=ConfigController::GetSSvipConfig($token);
+        $result = new ConfigResponse();
+        $result->VerifyString = $VerifyString;
+        $result->Config = $Configs;
+        $result->Provider = Session::get('provider');
+        $res = "";
+        try{
+            $res = $crypt->encrypt(json_encode($result),$Session->user_pub);
+        }catch (\Exception $e){
+            abort(404);
+        }
+        $Session->delete();
+        $request->session()->forget('action');
+        $request->session()->forget('fp');
+        $request->session()->forget('provider');
+        return $res;
+    }
     public static function Handle(Request $request){
         if($request->session()->has('action') && $request->session()->has('fp')){
             switch($request->session()->get('action')){
@@ -88,6 +121,24 @@ class RSAController extends Controller {
                     $PostData = file_get_contents("php://input");
                     return RSAController::PushConfig($PostData,$request);
                 break;
+                default:
+                    $PostData = file_get_contents("php://input");
+                    return RSAController::KeyExchange($PostData,$request);
+            }
+        }else{
+
+            $PostData = file_get_contents("php://input");
+            return RSAController::KeyExchange($PostData,$request);
+        }
+    }
+
+    public static function HandleSSVip(Request $request,$token){
+        if($request->session()->has('action') && $request->session()->has('fp')){
+            switch($request->session()->get('action')){
+                case "config":
+                    $PostData = file_get_contents("php://input");
+                    return RSAController::PushSSVipConfig($PostData,$request,$token);
+                    break;
                 default:
                     $PostData = file_get_contents("php://input");
                     return RSAController::KeyExchange($PostData,$request);
